@@ -39,6 +39,18 @@ public class AppController {
         return ResponseEntity.badRequest().body("Invalid username or password");
     }
 
+    @PutMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody User updateData) {
+        Optional<User> userOpt = userRepository.findByUsername(updateData.getUsername());
+        if(userOpt.isPresent()){
+            User user = userOpt.get();
+            user.setPassword(updateData.getPassword());
+            userRepository.save(user);
+            return ResponseEntity.ok(user);
+        }
+        return ResponseEntity.badRequest().body("Username not found");
+    }
+
     @PostMapping("/questionnaire/{id}")
     public ResponseEntity<?> submitQuestionnaire(@PathVariable Long id, @RequestBody User qData) {
         Optional<User> userOpt = userRepository.findById(id);
@@ -66,6 +78,12 @@ public class AppController {
             if(updateData.getPassword() != null && !updateData.getPassword().isEmpty()) user.setPassword(updateData.getPassword());
             if(updateData.getDailyStepGoal() != null) user.setDailyStepGoal(updateData.getDailyStepGoal());
             if(updateData.getTheme() != null) user.setTheme(updateData.getTheme());
+            if(updateData.getHeight() != null) user.setHeight(updateData.getHeight());
+            if(updateData.getWeight() != null) user.setWeight(updateData.getWeight());
+            if(updateData.getAge() != null) user.setAge(updateData.getAge());
+            if(updateData.getGender() != null) user.setGender(updateData.getGender());
+            if(updateData.getLocality() != null) user.setLocality(updateData.getLocality());
+            if(updateData.getPreferredActivity() != null) user.setPreferredActivity(updateData.getPreferredActivity());
             userRepository.save(user);
             return ResponseEntity.ok(user);
         }
