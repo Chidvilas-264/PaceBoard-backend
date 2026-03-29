@@ -9,6 +9,8 @@ import com.paceboard.repository.ChecklistItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.paceboard.entity.ChatMessage;
+import com.paceboard.repository.ChatMessageRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,6 +29,9 @@ public class AppController {
     @Autowired
     private ChecklistItemRepository checklistRepository;
 
+    @Autowired
+    private ChatMessageRepository chatMessageRepository;
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
         if(userRepository.findByUsername(user.getUsername()).isPresent()){
@@ -34,6 +39,11 @@ public class AppController {
         }
         userRepository.save(user);
         return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("/chat/{groupId}")
+    public ResponseEntity<List<ChatMessage>> getChatHistory(@PathVariable Long groupId) {
+        return ResponseEntity.ok(chatMessageRepository.findByGroupIdOrderByTimestampAsc(groupId));
     }
 
     @PostMapping("/login")
