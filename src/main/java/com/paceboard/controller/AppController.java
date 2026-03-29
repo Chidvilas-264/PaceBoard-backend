@@ -97,17 +97,23 @@ public class AppController {
 
     @GetMapping("/groups")
     public ResponseEntity<List<FitnessGroup>> getGroups(@RequestParam(required=false) String locality, @RequestParam(required=false) String activity) {
-        List<FitnessGroup> allGroups = groupRepository.findAll();
-        List<FitnessGroup> emptyGroups = allGroups.stream()
-            .filter(g -> g.getTotalMembers() != null && g.getTotalMembers() <= 0)
-            .collect(Collectors.toList());
-        if (!emptyGroups.isEmpty()) {
-            groupRepository.deleteAll(emptyGroups);
-        }
+        List<FitnessGroup> validGroups = groupRepository.findAll().stream()
+                .filter(g -> g.getTotalMembers() != null && g.getTotalMembers() > 0)
+                .collect(Collectors.toList());
 
-        if (locality != null) return ResponseEntity.ok(groupRepository.findByLocality(locality));
-        if (activity != null) return ResponseEntity.ok(groupRepository.findByPreferredActivity(activity));
-        return ResponseEntity.ok(groupRepository.findAll());
+        if (locality != null) {
+            List<FitnessGroup> localGroups = groupRepository.findByLocality(locality).stream()
+                .filter(g -> g.getTotalMembers() != null && g.getTotalMembers() > 0)
+                .collect(Collectors.toList());
+            return ResponseEntity.ok(localGroups);
+        }
+        if (activity != null) {
+            List<FitnessGroup> actGroups = groupRepository.findByPreferredActivity(activity).stream()
+                .filter(g -> g.getTotalMembers() != null && g.getTotalMembers() > 0)
+                .collect(Collectors.toList());
+            return ResponseEntity.ok(actGroups);
+        }
+        return ResponseEntity.ok(validGroups);
     }
 
     @PostMapping("/groups")
