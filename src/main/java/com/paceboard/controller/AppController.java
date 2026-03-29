@@ -122,7 +122,7 @@ public class AppController {
         if (group.getActiveSince() == null) {
             group.setActiveSince(java.time.LocalDate.now().toString());
         }
-        if (group.getTotalMembers() == null) {
+        if (group.getTotalMembers() == null || group.getTotalMembers() == 0) {
             group.setTotalMembers(1);
         }
         groupRepository.save(group);
