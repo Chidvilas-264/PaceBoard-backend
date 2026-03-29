@@ -149,9 +149,24 @@ public class AppController {
             FitnessGroup group = groupOpt.get();
             boolean removed = user.getJoinedGroups().removeIf(g -> g.getId().equals(group.getId()));
             if(removed) {
-                userRepository.save(user);
-                group.setTotalMembers(Math.max(0, group.getTotalMembers() - 1));
-                groupRepository.save(group);
+                userRepository.save(user); // Persist join table removal
+                
+                int newCount = Math.max(0, group.getTotalMembers() - 1);
+                if (newCount == 0) {
+                    groupRepository.delete(group); // Delete group entirely if empty
+                } else {
+                    group.setTotalMembers(newCount);
+                    // Transfer admin if the user leaving was the creator
+                    if (group.getCreatorId() != null && group.getCreatorId().equals(user.getId())) {
+                        Optional<User> nextAdmin = userRepository.findAll().stream()
+                            .filter(u -> !u.getId().equals(user.getId()) && u.getJoinedGroups().stream().anyMatch(g -> g.getId().equals(group.getId())))
+                            .findFirst();
+                        if (nextAdmin.isPresent()) {
+                            group.setCreatorId(nextAdmin.get().getId());
+                        }
+                    }
+                    groupRepository.save(group);
+                }
             }
             return ResponseEntity.ok(group);
         }
