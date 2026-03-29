@@ -104,6 +104,9 @@ public class AppController {
 
     @PostMapping("/groups")
     public ResponseEntity<?> createGroup(@RequestBody FitnessGroup group) {
+        if (groupRepository.findAll().stream().anyMatch(g -> g.getName().equalsIgnoreCase(group.getName()))) {
+            return ResponseEntity.badRequest().body("Group name already exists");
+        }
         if (group.getActiveSince() == null) {
             group.setActiveSince(java.time.LocalDate.now().toString());
         }
