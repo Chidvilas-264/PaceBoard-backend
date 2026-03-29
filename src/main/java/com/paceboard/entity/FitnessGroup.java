@@ -11,6 +11,8 @@ public class FitnessGroup {
     private String locality;
     private String preferredActivity;
     private Integer totalMembers = 0;
+    private String activeSince;
+    private Long creatorId;
     
     // Getters and Setters
     public Long getId() { return id; }
@@ -23,4 +25,8 @@ public class FitnessGroup {
     public void setPreferredActivity(String preferredActivity) { this.preferredActivity = preferredActivity; }
     public Integer getTotalMembers() { return totalMembers; }
     public void setTotalMembers(Integer totalMembers) { this.totalMembers = totalMembers; }
+    public String getActiveSince() { return activeSince; }
+    public void setActiveSince(String activeSince) { this.activeSince = activeSince; }
+    public Long getCreatorId() { return creatorId; }
+    public void setCreatorId(Long creatorId) { this.creatorId = creatorId; }
 }

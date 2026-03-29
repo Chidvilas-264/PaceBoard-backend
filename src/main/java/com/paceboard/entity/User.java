@@ -32,6 +32,14 @@ public class User {
     // Settings
     private String theme = "bright";
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_groups",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "group_id")
+    )
+    private java.util.Set<FitnessGroup> joinedGroups = new java.util.HashSet<>();
+
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -65,4 +73,6 @@ public class User {
     public void setFitnessStreak(Integer fitnessStreak) { this.fitnessStreak = fitnessStreak; }
     public String getTheme() { return theme; }
     public void setTheme(String theme) { this.theme = theme; }
+    public java.util.Set<FitnessGroup> getJoinedGroups() { return joinedGroups; }
+    public void setJoinedGroups(java.util.Set<FitnessGroup> joinedGroups) { this.joinedGroups = joinedGroups; }
 }

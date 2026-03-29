@@ -2,8 +2,10 @@ package com.paceboard.controller;
 
 import com.paceboard.entity.User;
 import com.paceboard.entity.FitnessGroup;
+import com.paceboard.entity.ChecklistItem;
 import com.paceboard.repository.UserRepository;
 import com.paceboard.repository.FitnessGroupRepository;
+import com.paceboard.repository.ChecklistItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,9 @@ public class AppController {
 
     @Autowired
     private FitnessGroupRepository groupRepository;
+
+    @Autowired
+    private ChecklistItemRepository checklistRepository;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
@@ -95,5 +100,83 @@ public class AppController {
         if (locality != null) return ResponseEntity.ok(groupRepository.findByLocality(locality));
         if (activity != null) return ResponseEntity.ok(groupRepository.findByPreferredActivity(activity));
         return ResponseEntity.ok(groupRepository.findAll());
+    }
+
+    @PostMapping("/groups")
+    public ResponseEntity<?> createGroup(@RequestBody FitnessGroup group) {
+        if (group.getActiveSince() == null) {
+            group.setActiveSince(java.time.LocalDate.now().toString());
+        }
+        if (group.getTotalMembers() == null) {
+            group.setTotalMembers(1);
+        }
+        groupRepository.save(group);
+        if (group.getCreatorId() != null) {
+            Optional<User> userOpt = userRepository.findById(group.getCreatorId());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                user.getJoinedGroups().add(group);
+                userRepository.save(user);
+            }
+        }
+        return ResponseEntity.ok(group);
+    }
+
+    @PostMapping("/groups/{groupId}/join/{userId}")
+    public ResponseEntity<?> joinGroup(@PathVariable Long groupId, @PathVariable Long userId) {
+        Optional<FitnessGroup> groupOpt = groupRepository.findById(groupId);
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (groupOpt.isPresent() && userOpt.isPresent()) {
+            User user = userOpt.get();
+            FitnessGroup group = groupOpt.get();
+            if(!user.getJoinedGroups().contains(group)) {
+                user.getJoinedGroups().add(group);
+                userRepository.save(user);
+                group.setTotalMembers(group.getTotalMembers() + 1);
+                groupRepository.save(group);
+            }
+            return ResponseEntity.ok(group);
+        }
+        return ResponseEntity.badRequest().body("Group or User not found");
+    }
+
+    @GetMapping("/users/{userId}/groups")
+    public ResponseEntity<?> getUserGroups(@PathVariable Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            return ResponseEntity.ok(userOpt.get().getJoinedGroups());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // Checklist Endpoints
+    @GetMapping("/users/{userId}/checklist")
+    public ResponseEntity<List<ChecklistItem>> getChecklist(@PathVariable Long userId) {
+        return ResponseEntity.ok(checklistRepository.findByUserId(userId));
+    }
+
+    @PostMapping("/users/{userId}/checklist")
+    public ResponseEntity<?> addChecklistItem(@PathVariable Long userId, @RequestBody ChecklistItem item) {
+        item.setUserId(userId);
+        return ResponseEntity.ok(checklistRepository.save(item));
+    }
+
+    @PutMapping("/checklist/{id}")
+    public ResponseEntity<?> updateChecklistItem(@PathVariable Long id, @RequestBody ChecklistItem updatedItem) {
+        Optional<ChecklistItem> itemOpt = checklistRepository.findById(id);
+        if (itemOpt.isPresent()) {
+            ChecklistItem item = itemOpt.get();
+            if (updatedItem.getTaskName() != null) item.setTaskName(updatedItem.getTaskName());
+            if (updatedItem.getTime() != null) item.setTime(updatedItem.getTime());
+            if (updatedItem.getCompleted() != null) item.setCompleted(updatedItem.getCompleted());
+            return ResponseEntity.ok(checklistRepository.save(item));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/checklist/{id}")
+    public ResponseEntity<?> deleteChecklistItem(@PathVariable Long id) {
+        checklistRepository.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 }
