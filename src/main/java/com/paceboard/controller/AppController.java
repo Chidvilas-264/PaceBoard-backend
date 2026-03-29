@@ -190,6 +190,30 @@ public class AppController {
         return ResponseEntity.badRequest().body("Group or User not found");
     }
 
+    @DeleteMapping("/groups/{groupId}/{userId}")
+    public ResponseEntity<?> deleteGroupPermanently(@PathVariable Long groupId, @PathVariable Long userId) {
+        Optional<FitnessGroup> groupOpt = groupRepository.findById(groupId);
+        if (groupOpt.isPresent()) {
+            FitnessGroup group = groupOpt.get();
+            if (group.getCreatorId() == null || !group.getCreatorId().equals(userId)) {
+                return ResponseEntity.status(403).body("Only the creator can permanently delete the group");
+            }
+            
+            // Remove group from all members' joined groups to prevent FK constraints
+            List<User> allUsers = userRepository.findAll();
+            for (User u : allUsers) {
+                if (u.getJoinedGroups().stream().anyMatch(g -> g.getId().equals(groupId))) {
+                    u.getJoinedGroups().removeIf(g -> g.getId().equals(groupId));
+                    userRepository.save(u);
+                }
+            }
+            
+            groupRepository.delete(group);
+            return ResponseEntity.ok().body("Group permanently deleted");
+        }
+        return ResponseEntity.badRequest().body("Group not found");
+    }
+
     @GetMapping("/groups/{groupId}/members")
     public ResponseEntity<?> getGroupMembers(@PathVariable Long groupId) {
         List<User> members = userRepository.findAll().stream()
