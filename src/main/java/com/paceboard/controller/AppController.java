@@ -147,8 +147,8 @@ public class AppController {
         if (groupOpt.isPresent() && userOpt.isPresent()) {
             User user = userOpt.get();
             FitnessGroup group = groupOpt.get();
-            if(user.getJoinedGroups().contains(group)) {
-                user.getJoinedGroups().remove(group);
+            boolean removed = user.getJoinedGroups().removeIf(g -> g.getId().equals(group.getId()));
+            if(removed) {
                 userRepository.save(user);
                 group.setTotalMembers(Math.max(0, group.getTotalMembers() - 1));
                 groupRepository.save(group);
@@ -156,6 +156,16 @@ public class AppController {
             return ResponseEntity.ok(group);
         }
         return ResponseEntity.badRequest().body("Group or User not found");
+    }
+
+    @GetMapping("/groups/{groupId}/members")
+    public ResponseEntity<?> getGroupMembers(@PathVariable Long groupId) {
+        List<User> members = userRepository.findAll().stream()
+                .filter(u -> u.getJoinedGroups().stream().anyMatch(g -> g.getId().equals(groupId)))
+                .toList();
+        // Nullify passwords before returning
+        members.forEach(m -> m.setPassword(null));
+        return ResponseEntity.ok(members);
     }
 
     @GetMapping("/users/{userId}/groups")
