@@ -140,6 +140,24 @@ public class AppController {
         return ResponseEntity.badRequest().body("Group or User not found");
     }
 
+    @PostMapping("/groups/{groupId}/leave/{userId}")
+    public ResponseEntity<?> leaveGroup(@PathVariable Long groupId, @PathVariable Long userId) {
+        Optional<FitnessGroup> groupOpt = groupRepository.findById(groupId);
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (groupOpt.isPresent() && userOpt.isPresent()) {
+            User user = userOpt.get();
+            FitnessGroup group = groupOpt.get();
+            if(user.getJoinedGroups().contains(group)) {
+                user.getJoinedGroups().remove(group);
+                userRepository.save(user);
+                group.setTotalMembers(Math.max(0, group.getTotalMembers() - 1));
+                groupRepository.save(group);
+            }
+            return ResponseEntity.ok(group);
+        }
+        return ResponseEntity.badRequest().body("Group or User not found");
+    }
+
     @GetMapping("/users/{userId}/groups")
     public ResponseEntity<?> getUserGroups(@PathVariable Long userId) {
         Optional<User> userOpt = userRepository.findById(userId);
