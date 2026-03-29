@@ -100,6 +100,7 @@ public class AppController {
             if(updateData.getGender() != null) user.setGender(updateData.getGender());
             if(updateData.getLocality() != null) user.setLocality(updateData.getLocality());
             if(updateData.getPreferredActivity() != null) user.setPreferredActivity(updateData.getPreferredActivity());
+            if(updateData.getPrivateProfile() != null) user.setPrivateProfile(updateData.getPrivateProfile());
             userRepository.save(user);
             return ResponseEntity.ok(user);
         }

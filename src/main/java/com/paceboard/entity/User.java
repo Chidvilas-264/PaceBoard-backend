@@ -24,6 +24,9 @@ public class User {
     private String locality;
     private String preferredActivity;
 
+    @Column(name = "is_private")
+    private Boolean privateProfile = false;
+
     // Dashboard Data
     private Integer dailyStepGoal = 10000;
     private Integer monthlySteps = 0;
@@ -65,6 +68,8 @@ public class User {
     public void setLocality(String locality) { this.locality = locality; }
     public String getPreferredActivity() { return preferredActivity; }
     public void setPreferredActivity(String preferredActivity) { this.preferredActivity = preferredActivity; }
+    public Boolean getPrivateProfile() { return privateProfile; }
+    public void setPrivateProfile(Boolean privateProfile) { this.privateProfile = privateProfile; }
     public Integer getDailyStepGoal() { return dailyStepGoal; }
     public void setDailyStepGoal(Integer dailyStepGoal) { this.dailyStepGoal = dailyStepGoal; }
     public Integer getMonthlySteps() { return monthlySteps; }
