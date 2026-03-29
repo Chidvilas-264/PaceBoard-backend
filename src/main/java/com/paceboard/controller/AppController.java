@@ -261,4 +261,20 @@ public class AppController {
         checklistRepository.deleteById(id);
         return ResponseEntity.ok().build();
     }
+    @Autowired
+    private com.paceboard.service.AiService aiService;
+
+    @PostMapping("/ai/chat")
+    public ResponseEntity<?> chatWithAi(@RequestBody java.util.Map<String, String> payload) {
+        String userMessage = payload.get("message");
+        if (userMessage == null || userMessage.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Message cannot be empty");
+        }
+        try {
+            String aiResponse = aiService.generateChatResponse(userMessage);
+            return ResponseEntity.ok(java.util.Collections.singletonMap("response", aiResponse));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(java.util.Collections.singletonMap("error", e.getMessage()));
+        }
+    }
 }
