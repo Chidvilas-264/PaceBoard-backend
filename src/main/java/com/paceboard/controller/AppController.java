@@ -97,6 +97,14 @@ public class AppController {
 
     @GetMapping("/groups")
     public ResponseEntity<List<FitnessGroup>> getGroups(@RequestParam(required=false) String locality, @RequestParam(required=false) String activity) {
+        List<FitnessGroup> allGroups = groupRepository.findAll();
+        List<FitnessGroup> emptyGroups = allGroups.stream()
+            .filter(g -> g.getTotalMembers() != null && g.getTotalMembers() <= 0)
+            .collect(Collectors.toList());
+        if (!emptyGroups.isEmpty()) {
+            groupRepository.deleteAll(emptyGroups);
+        }
+
         if (locality != null) return ResponseEntity.ok(groupRepository.findByLocality(locality));
         if (activity != null) return ResponseEntity.ok(groupRepository.findByPreferredActivity(activity));
         return ResponseEntity.ok(groupRepository.findAll());
