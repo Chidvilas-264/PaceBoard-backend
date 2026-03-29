@@ -119,9 +119,25 @@ public class AppController {
 
     @PostMapping("/groups")
     public ResponseEntity<?> createGroup(@RequestBody FitnessGroup group) {
-        if (groupRepository.findAll().stream().anyMatch(g -> g.getName().equalsIgnoreCase(group.getName()))) {
-            return ResponseEntity.badRequest().body("Group name already exists");
+        List<FitnessGroup> existingGroups = groupRepository.findAll().stream()
+                .filter(g -> g.getName().equalsIgnoreCase(group.getName()))
+                .collect(Collectors.toList());
+                
+        for (FitnessGroup existing : existingGroups) {
+            if (existing.getTotalMembers() == null || existing.getTotalMembers() <= 0) {
+                List<User> allUsers = userRepository.findAll();
+                for (User u : allUsers) {
+                    if (u.getJoinedGroups().stream().anyMatch(g -> g.getId().equals(existing.getId()))) {
+                        u.getJoinedGroups().removeIf(g -> g.getId().equals(existing.getId()));
+                        userRepository.save(u);
+                    }
+                }
+                groupRepository.delete(existing);
+            } else {
+                return ResponseEntity.badRequest().body("Group name already exists");
+            }
         }
+
         if (group.getActiveSince() == null) {
             group.setActiveSince(java.time.LocalDate.now().toString());
         }
